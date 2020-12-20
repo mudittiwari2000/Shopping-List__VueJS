@@ -1,3 +1,7 @@
-# Getting-started-with-Vuejs
+# Shopping-List__VueJS
 
-Getting Started with VueJS, from VueJS Fundamentals at vueschool.io
+  ### A Shopping List made using VueJS. 
+
+  > A follow-through of "VueJS Fundamentals" at [vueschool].
+
+[vueschool]: https://vueschool.io
