@@ -10,25 +10,134 @@
 
 <body>
   <div id="shopping-list">
-    <h1>{{ header.toLocaleUpperCase() }}</h1>
-    <input v-model="newItem" type="text" placeholder="Add an Item" @keyup.enter="items.push(newItem)">
-    <button class="btn btn-primary" @click="items.push(newItem)">Save</button>
+    <div class="header">
+      <h1>{{ header.toLocaleUpperCase() }}</h1>
+      <button v-if="state === 'default'" class="btn btn-primary" @click="changeState('edit')">Add Item</button>
+      <button v-if="state === 'edit'" class="btn btn-cancel" @click="changeState('default')">Cancel</button>
+    </div>
+    <div v-if="state === 'edit'" class="add-item-form">
+      <input v-model="newItem" type="text" placeholder="Add an Item" @keyup.enter="saveItem">
+      <p>{{ characterCount }}/60</p>
+      <button :disabled="!newItem || characterCount > characterLimit" class="btn btn-primary"
+        @click="saveItem">Save</button>
+    </div>
     <ul>
-      <li v-for="item in items">{{ item }}</li>
+      <li v-if="newItem" class="list-item">{{ newItem }}</li>
+      <li v-for="item in reversedItems" v-if="item.count" class="list-item">
+        <div class="list-content" :class="[item.purchased? 'strikeout': '', item.highPriority? 'priority': '']"
+          @click="togglePurchased(item)">
+          {{ item.label }}({{ item.count }})
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-transparent" v-if="item.purchased" @click="handleModalOpen(item)"> &times; </button>
+          <button class="btn btn-transparent" v-if="!item.purchased" @click="incrementCount(item)"> + </button>
+          <button class="btn btn-transparent" v-if="item.count && !item.purchased" @click="decrementCount(item)"> -
+          </button>
+        </div>
+        <!-- Modal -->
+        <div class="modal" :class="[modalOpen? 'modal-open': 'modal-close']">
+          <div class="modal__overlay" @click="handleModalClose"></div>
+          <div class="modal__body">
+            <div class="modal__header">
+              Are you sure?
+              <span class="modal__header-underline"></span>
+            </div>
+            <div class="modal__content">This action <strong>WILL</strong> remove the item from the list completely and
+              permanently. The data will not be recoverable.</div>
+            <div class="modal__actions">
+              <button class="btn btn-cancel" @click="handleModalClose">Cancel</button>
+              <button class="btn btn-primary ml" @click="deleteItem">Delete Item</button>
+            </div>
+          </div>
+        </div>
+      </li>
     </ul>
+    <p v-if="items.length === 0">Nice Job mate! You sunk all your parents' money again!</p>
+    <div class="df">From <a :href="link" target="_blank" class="link link-vue">{{name}}</a></div>
   </div>
   <script src="https://unpkg.com/vue"></script>
   <script>
     const shoppinglist = new Vue({
       el: '#shopping-list',
       data: {
+        state: 'default',
         header: 'Shopping list app',
-        items: [
-          '1 PepeJeans T-shirt',
-          '2 pair of shoes',
-          '3 Juice packs'
+        items: [{
+            label: 'Tea cups',
+            purchased: false,
+            highPriority: false,
+            count: 10
+          },
+          {
+            label: 'Bongs',
+            purchased: true,
+            highPriority: false,
+            count: 2
+          },
+          {
+            label: 'Lights',
+            purchased: true,
+            highPriority: false,
+            count: 3
+          },
+          {
+            label: 'Manhwas',
+            purchased: false,
+            highPriority: true,
+            count: 5
+          },
         ],
-        newItem: ''
+        newItem: '',
+        characterLimit: 60,
+        link: "http://vueschool.io",
+        name: 'Vue School',
+        modalOpen: false,
+        currentItem: {}
+      },
+      computed: {
+        characterCount() {
+          return this.newItem.length;
+        },
+        reversedItems() {
+          return [...this.items].reverse()
+        },
+      },
+      methods: {
+        saveItem: function () {
+          this.items.push({
+            label: this.newItem,
+            purchased: false,
+            highPriority: false,
+            count: 1
+          });
+          this.newItem = '';
+        },
+        changeState: function (newState) {
+          this.state = newState;
+
+          this.newItem = '';
+        },
+        togglePurchased: function (item) {
+          item.purchased = !item.purchased;
+        },
+        incrementCount: function (item) {
+          item.count += 1;
+        },
+        decrementCount: function (item) {
+          item.count -= 1;
+        },
+        deleteItem: function () {
+          console.log(this.currentItem)
+          this.modalOpen = false;
+          this.items = this.items.filter(el => el.label !== this.currentItem.label)
+        },
+        handleModalOpen: function (item) {
+          this.currentItem = item
+          this.modalOpen = true;
+        },
+        handleModalClose: function (event) {
+          this.modalOpen = false;
+        }
       }
     })
   </script>
